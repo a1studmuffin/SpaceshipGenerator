@@ -25,6 +25,7 @@ How it works
 Extreme examples
 ----------------
 The following screenshots were created using extreme values for the number of hull segments and asymmetry segments to show how the algorithm works.
+
 ![alt tag](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/extreme_examples.jpg)
 
 Credits
