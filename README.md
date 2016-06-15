@@ -22,6 +22,11 @@ How it works
 * Apply materials to the final result.
 * Take over the universe with your new infinite fleet of spaceships.
 
+Extreme examples
+----------------
+The following screenshots were created using extreme values for the number of hull segments and asymmetry segments to show how the algorithm works.
+![alt tag](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/extreme_examples.jpg)
+
 Credits
 -------
 Written for fun as part of the [/r/proceduralgeneration](https://www.reddit.com/r/proceduralgeneration/) June 2016 [monthly challenge](https://www.reddit.com/r/proceduralgeneration/comments/4mn9gj/monthly_challenge_7_june_2016_procedural/).
