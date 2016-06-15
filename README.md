@@ -2,7 +2,7 @@
 
 A Blender script to procedurally generate 3D spaceships from a random seed.
 
-![alt tag](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/spaceships_grid.jpg)
+![Spaceship screenshots](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/spaceships_grid.jpg)
 
 Usage
 -----
@@ -13,6 +13,9 @@ Usage
 
 How it works
 ------------
+
+![Step-by-step animation](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/step-by-step-animation.gif)
+
 * Start with a box.
 * Build the hull: Extrude the front/rear faces several times, adding random translation/scaling/rotation along the way.
 * Add asymmetry to the hull: Pick random faces and extrude them out in a similar manner, reducing in scale each time.
@@ -26,7 +29,7 @@ Extreme examples
 ----------------
 The following screenshots were created using extreme values for the number of hull segments and asymmetry segments to show how the algorithm works.
 
-![alt tag](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/extreme_examples.jpg)
+![Extreme spaceship screenshots](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/extreme_examples.jpg)
 
 Credits
 -------
