@@ -16,6 +16,8 @@ How it works
 
 ![Step-by-step animation](https://raw.githubusercontent.com/a1studmuffin/SpaceshipGenerator/master/screenshots/step-by-step-animation.gif)
 
+Watch on YouTube: https://www.youtube.com/watch?v=xJZyXqJ6nog
+
 * Start with a box.
 * Build the hull: Extrude the front/rear faces several times, adding random translation/scaling/rotation along the way.
 * Add asymmetry to the hull: Pick random faces and extrude them out in a similar manner, reducing in scale each time.
