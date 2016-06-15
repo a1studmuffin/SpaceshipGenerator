@@ -349,10 +349,8 @@ def add_surface_antenna_to_face(bm, face):
                                                cap_ends=True,
                                                cap_tris=False,
                                                segments=num_segments,
-                                               diameter1=base_diameter *
-                                               uniform(1, 1.5),
-                                               diameter2=base_diameter *
-                                               uniform(1.5, 2),
+                                               diameter1=base_diameter * uniform(1, 1.5),
+                                               diameter2=base_diameter * uniform(1.5, 2),
                                                depth=depth_short,
                                                matrix=get_face_matrix(face, pos + face.normal * depth_short * 0.45))
                 for vert in result['verts']:
