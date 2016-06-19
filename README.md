@@ -10,7 +10,7 @@ Usage
 * Download newest `add_mesh_SpaceshipGenerator.zip` from releases
 * Under File > User Preferences... > Add-ons > Install From File... open the downloaded ZIP file
 * Under File > User Preferences... > Add-ons enable this script (search for "spaceship")
-* Add a spaceship with in the 3D View under Add > Mesh > Spaceship
+* Add a spaceship in the 3D View under Add > Mesh > Spaceship
 
 How it works
 ------------
