@@ -11,11 +11,11 @@ bl_info = {
 }
 
 if "bpy" in locals():
-	# reload logic (magic)
+    # reload logic (magic)
     import importlib
     importlib.reload(spaceship_generator)
 else:
-	from add_mesh_SpaceshipGenerator import spaceship_generator
+    from add_mesh_SpaceshipGenerator import spaceship_generator
 
 import bpy
 from bpy.props import StringProperty, BoolProperty, IntProperty
