@@ -10,6 +10,7 @@
 
 import sys
 import os
+import os.path
 import bpy
 import bmesh
 import datetime
@@ -18,6 +19,11 @@ from mathutils import Vector, Matrix
 from random import random, seed, uniform, randint, randrange
 from enum import IntEnum
 from colorsys import hls_to_rgb
+
+DIR = os.path.dirname(os.path.abspath(__file__))
+
+def resource_path(*path_components):
+    return os.path.join(DIR, *path_components)
 
 # Deletes all existing spaceships and unused materials from the scene
 def reset_scene():
@@ -395,35 +401,25 @@ class Material(IntEnum):
 # Returns the texture.
 img_cache = {}
 def create_texture(name, tex_type, filename, use_alpha=True):
-    global img_cache
-    img = None
     if filename in img_cache:
         # Image has been cached already, so just use that.
-        img = img_cache[filename]
+        img = img_cache[(filename, use_alpha)]
     else:
         # We haven't cached this asset yet, so load it from disk.
-        
-        # Figure out the script path depending on our context (command-line or in-editor)
-        script_path = bpy.context.space_data.text.filepath if bpy.context.space_data else __file__
-        
-        # Get the folder the script lives in. If it lives in a .blend file, strip that off too.
-        script_folder = os.path.split(os.path.realpath(script_path))[0]
-        if script_folder.endswith('.blend'):
-            script_folder = os.path.split(script_folder)[0]
-        
-        filepath = os.path.join(script_folder, filename)
         try:
-            img = bpy.data.images.load(filepath)
+            img = bpy.data.images.load(filename)
         except:
-            raise NameError("Cannot load image %s" % filepath)
+            raise IOError("Cannot load image: %s" % filename)
+
+        img.use_alpha = use_alpha
+        img.pack()
         
         # Cache the asset
-        img_cache[filename] = img
+        img_cache[(filename, use_alpha)] = img
     
     # Create and return a new texture using img
     tex = bpy.data.textures.new(name, tex_type)
     tex.image = img
-    tex.image.use_alpha = use_alpha
     return tex
 
 # Adds a hull normal map texture slot to a material.
@@ -455,7 +451,7 @@ def create_materials():
 
     # Load up the hull normal map
     hull_normal_colortex = create_texture(
-        'ColorTex', 'IMAGE', 'textures\\hull_normal.png')
+        'ColorTex', 'IMAGE', resource_path('textures', 'hull_normal.png'))
     hull_normal_colortex.use_normal_map = True
 
     # Build the hull texture
@@ -469,7 +465,7 @@ def create_materials():
     # Add a diffuse layer that sets the window color
     mtex = mat.texture_slots.add()
     mtex.texture = create_texture(
-        'ColorTex', 'IMAGE', 'textures\\hull_lights_diffuse.png')
+        'ColorTex', 'IMAGE', resource_path('textures', 'hull_lights_diffuse.png'))
     mtex.texture_coords = 'GLOBAL'
     mtex.mapping = 'CUBE'
     mtex.blend_type = 'ADD'
@@ -480,7 +476,7 @@ def create_materials():
     # Add an emissive layer that lights up the windows
     mtex = mat.texture_slots.add()
     mtex.texture = create_texture(
-        'ColorTex', 'IMAGE', 'textures\\hull_lights_emit.png', False)
+        'ColorTex', 'IMAGE', resource_path('textures', 'hull_lights_emit.png'), False)
     mtex.texture_coords = 'GLOBAL'
     mtex.mapping = 'CUBE'
     mtex.use_map_emit = True
@@ -805,7 +801,7 @@ if __name__ == "__main__":
             # Render the scene to disk
             script_path = bpy.context.space_data.text.filepath if bpy.context.space_data else __file__
             folder = output_path if output_path else os.path.split(os.path.realpath(script_path))[0]
-            filename = 'renders\\' + timestamp + '\\' + timestamp + '_' + str(frame).zfill(5) + '.png'
+            filename = os.path.join('renders', timestamp, timestamp + '_' + str(frame).zfill(5) + '.png')
             bpy.data.scenes['Scene'].render.filepath = os.path.join(folder, filename)
             print('Rendering frame ' + str(frame) + '...')
             bpy.ops.render.render(write_still=True)
