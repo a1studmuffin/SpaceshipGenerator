@@ -51,6 +51,6 @@ Authored and maintained by Michael Davies.
 > GitHub [@a1studmuffin](https://github.com/a1studmuffin)
 > Twitter [@butterparty](https://twitter.com/butterparty)
 
-Special thanks to [@panzi](https://github.com/panzi) for bugfixes, a proper GUI and build script.
+Special thanks to [@panzi](https://github.com/panzi) for bugfixes, a proper GUI and build script. Also to [@mjrthemes](https://github.com/mjrthemes) for bugfixing.
 
 [MIT License]: http://mit-license.org/
