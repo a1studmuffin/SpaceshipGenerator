@@ -729,8 +729,8 @@ if __name__ == "__main__":
     if generate_single_spaceship:
         # Reset the scene, generate a single spaceship and focus on it
         reset_scene()
-        seed = '' # add anything here to generate the same spaceship
-        obj = generate_spaceship(seed)
+        customseed = '' # add anything here to generate the same spaceship
+        obj = generate_spaceship(customseed)
 
         # View the selected object in all views
         for area in bpy.context.screen.areas:
