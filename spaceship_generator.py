@@ -702,12 +702,12 @@ def generate_spaceship(random_seed='',
 
     # Add a fairly broad bevel modifier to angularize shape
     if apply_bevel_modifier:
-        bpy.ops.object.modifier_add(type='BEVEL')
-        ob.modifiers["Bevel"].width = uniform(5, 20)
-        ob.modifiers["Bevel"].offset_type = 'PERCENT'
-        ob.modifiers["Bevel"].segments = 2
-        ob.modifiers["Bevel"].profile = 0.25
-        ob.modifiers["Bevel"].limit_method = 'NONE'
+        bevel_modifier = ob.modifiers.new('Bevel', 'BEVEL')
+        bevel_modifier.width = uniform(5, 20)
+        bevel_modifier.offset_type = 'PERCENT'
+        bevel_modifier.segments = 2
+        bevel_modifier.profile = 0.25
+        bevel_modifier.limit_method = 'NONE'
 
     # Add materials to the spaceship
     me = ob.data
