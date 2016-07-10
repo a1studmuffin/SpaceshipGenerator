@@ -15,7 +15,7 @@ if "bpy" in locals():
     import importlib
     importlib.reload(spaceship_generator)
 else:
-    from add_mesh_SpaceshipGenerator import spaceship_generator
+    from . import spaceship_generator
 
 import bpy
 from bpy.props import StringProperty, BoolProperty, IntProperty
