@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Spaceship Generator",
     "author": "Michael Davies",
-    "version": (1, 0, 0),
+    "version": (1, 1, 2),
     "blender": (2, 76, 0),
     "location": "View3D > Add > Mesh",
     "description": "Procedurally generate 3D spaceships from a random seed.",
