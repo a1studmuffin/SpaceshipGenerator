@@ -22,8 +22,10 @@ from colorsys import hls_to_rgb
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 
+
 def resource_path(*path_components):
     return os.path.join(DIR, *path_components)
+
 
 # Deletes all existing spaceships and unused materials from the scene
 def reset_scene():
@@ -37,6 +39,7 @@ def reset_scene():
         if not texture.users:
             bpy.data.textures.remove(texture)
 
+
 # Extrudes a face along its normal by translate_forwards units.
 # Returns the new face, and optionally fills out extruded_face_list
 # with all the additional side faces created from the extrusion.
@@ -49,6 +52,7 @@ def extrude_face(bm, face, translate_forwards=0.0, extruded_face_list=None):
                         vec=new_face.normal * translate_forwards,
                         verts=new_face.verts)
     return new_face
+
 
 # Similar to extrude_face, except corrigates the geometry to create "ribs".
 # Returns the new face.
@@ -65,6 +69,7 @@ def ribbed_extrude_face(bm, face, translate_forwards, num_ribs=3, rib_scale=0.9)
         new_face = extrude_face(bm, new_face, translate_forwards_per_rib * 0.25)
     return new_face
 
+
 # Scales a face in local face space. Ace!
 def scale_face(bm, face, scale_x, scale_y, scale_z):
     face_space = get_face_matrix(face)
@@ -73,6 +78,7 @@ def scale_face(bm, face, scale_x, scale_y, scale_z):
                     vec=Vector((scale_x, scale_y, scale_z)),
                     space=face_space,
                     verts=face.verts)
+
 
 # Returns a rough 4x4 transform matrix for a face (doesn't handle
 # distortion/shear) with optional position override.
@@ -104,6 +110,7 @@ def get_face_matrix(face, pos=None):
     mat[3][3] = 1
     return mat
 
+
 # Returns the rough length and width of a quad face.
 # Assumes a perfect rectangle, but close enough.
 def get_face_width_and_height(face):
@@ -112,6 +119,7 @@ def get_face_width_and_height(face):
     width = (face.verts[0].co - face.verts[1].co).length
     height = (face.verts[2].co - face.verts[1].co).length
     return width, height
+
 
 # Returns the rough aspect ratio of a face. Always >= 1.
 def get_aspect_ratio(face):
@@ -122,24 +130,26 @@ def get_aspect_ratio(face):
         face_aspect_ratio = 1.0 / face_aspect_ratio
     return face_aspect_ratio
 
+
 # Returns true if this face is pointing behind the ship
 def is_rear_face(face):
     return face.normal.x < -0.95
+
 
 # Given a face, splits it into a uniform grid and extrudes each grid face
 # out and back in again, making an exhaust shape.
 def add_exhaust_to_face(bm, face):
     if not face.is_valid:
         return
-    
+
     # The more square the face is, the more grid divisions it might have
     num_cuts = randint(1, int(4 - get_aspect_ratio(face)))
     result = bmesh.ops.subdivide_edges(bm,
-                                    edges=face.edges[:],
-                                    cuts=num_cuts,
-                                    fractal=0.02,
-                                    use_grid_fill=True)
-                                    
+                                       edges=face.edges[:],
+                                       cuts=num_cuts,
+                                       fractal=0.02,
+                                       use_grid_fill=True)
+
     exhaust_length = uniform(0.1, 0.2)
     scale_outer = 1 / uniform(1.3, 1.6)
     scale_inner = 1 / uniform(1.05, 1.1)
@@ -155,16 +165,17 @@ def add_exhaust_to_face(bm, face):
                     extruded_face.material_index = Material.exhaust_burn
                 scale_face(bm, face, scale_inner, scale_inner, scale_inner)
 
+
 # Given a face, splits it up into a smaller uniform grid and extrudes each grid cell.
 def add_grid_to_face(bm, face):
     if not face.is_valid:
         return
     result = bmesh.ops.subdivide_edges(bm,
-                                    edges=face.edges[:],
-                                    cuts=randint(2, 4),
-                                    fractal=0.02,
-                                    use_grid_fill=True,
-                                    use_single_edge=False)
+                                       edges=face.edges[:],
+                                       cuts=randint(2, 4),
+                                       fractal=0.02,
+                                       use_grid_fill=True,
+                                       use_single_edge=False)
     grid_length = uniform(0.025, 0.15)
     scale = 0.8
     for face in result['geom']:
@@ -173,9 +184,10 @@ def add_grid_to_face(bm, face):
             extruded_face_list = []
             face = extrude_face(bm, face, grid_length, extruded_face_list)
             for extruded_face in extruded_face_list:
-                if abs(face.normal.z) < 0.707: # side face
+                if abs(face.normal.z) < 0.707:  # side face
                     extruded_face.material_index = material_index
             scale_face(bm, face, scale, scale, scale)
+
 
 # Given a face, adds some cylinders along it in a grid pattern.
 def add_cylinders_to_face(bm, face):
@@ -195,8 +207,8 @@ def add_cylinders_to_face(bm, face):
             face.verts[2].co, (h + 1) / float(horizontal_step + 1))
         for v in range(vertical_step):
             pos = top.lerp(bottom, (v + 1) / float(vertical_step + 1))
-            cylinder_matrix = get_face_matrix(face, pos) * \
-                Matrix.Rotation(radians(90), 3, 'X').to_4x4()
+            cylinder_matrix = get_face_matrix(face, pos) @ \
+                              Matrix.Rotation(radians(90), 3, 'X').to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
                                   cap_tris=False,
@@ -205,6 +217,7 @@ def add_cylinders_to_face(bm, face):
                                   diameter2=cylinder_size,
                                   depth=cylinder_depth,
                                   matrix=cylinder_matrix)
+
 
 # Given a face, adds some weapon turrets to it in a grid pattern.
 # Each turret will have a random orientation.
@@ -225,8 +238,8 @@ def add_weapons_to_face(bm, face):
             face.verts[2].co, (h + 1) / float(horizontal_step + 1))
         for v in range(vertical_step):
             pos = top.lerp(bottom, (v + 1) / float(vertical_step + 1))
-            face_matrix = get_face_matrix(face, pos + face.normal * weapon_depth * 0.5) * \
-                Matrix.Rotation(radians(uniform(0, 90)), 3, 'Z').to_4x4()
+            face_matrix = get_face_matrix(face, pos + face.normal * weapon_depth * 0.5) @ \
+                          Matrix.Rotation(radians(uniform(0, 90)), 3, 'Z').to_4x4()
 
             # Turret foundation
             bmesh.ops.create_cone(bm,
@@ -239,9 +252,9 @@ def add_weapons_to_face(bm, face):
                                   matrix=face_matrix)
 
             # Turret left guard
-            left_guard_mat = face_matrix * \
-                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() * \
-                Matrix.Translation(Vector((0, 0, weapon_size * 0.6))).to_4x4()
+            left_guard_mat = face_matrix @ \
+                             Matrix.Rotation(radians(90), 3, 'Y').to_4x4() @ \
+                             Matrix.Translation(Vector((0, 0, weapon_size * 0.6))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
                                   cap_tris=False,
@@ -252,9 +265,9 @@ def add_weapons_to_face(bm, face):
                                   matrix=left_guard_mat)
 
             # Turret right guard
-            right_guard_mat = face_matrix * \
-                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() * \
-                Matrix.Translation(Vector((0, 0, weapon_size * -0.6))).to_4x4()
+            right_guard_mat = face_matrix @ \
+                              Matrix.Rotation(radians(90), 3, 'Y').to_4x4() @ \
+                              Matrix.Translation(Vector((0, 0, weapon_size * -0.6))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
                                   cap_tris=False,
@@ -266,9 +279,9 @@ def add_weapons_to_face(bm, face):
 
             # Turret housing
             upward_angle = uniform(0, 45)
-            turret_house_mat = face_matrix * \
-                Matrix.Rotation(radians(upward_angle), 3, 'X').to_4x4() * \
-                Matrix.Translation(Vector((0, weapon_size * -0.4, 0))).to_4x4()
+            turret_house_mat = face_matrix @ \
+                               Matrix.Rotation(radians(upward_angle), 3, 'X').to_4x4() @ \
+                               Matrix.Translation(Vector((0, weapon_size * -0.4, 0))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
                                   cap_tris=False,
@@ -286,7 +299,7 @@ def add_weapons_to_face(bm, face):
                                   diameter1=weapon_size * 0.1,
                                   diameter2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
-                                  matrix=turret_house_mat * \
+                                  matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * 0.2, 0, -weapon_size))).to_4x4())
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -295,8 +308,9 @@ def add_weapons_to_face(bm, face):
                                   diameter1=weapon_size * 0.1,
                                   diameter2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
-                                  matrix=turret_house_mat * \
+                                  matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * -0.2, 0, -weapon_size))).to_4x4())
+
 
 # Given a face, adds a sphere on the surface, partially inset.
 def add_sphere_to_face(bm, face):
@@ -314,6 +328,7 @@ def add_sphere_to_face(bm, face):
     for vert in result['verts']:
         for face in vert.link_faces:
             face.material_index = Material.hull
+
 
 # Given a face, adds some pointy intimidating antennas.
 def add_surface_antenna_to_face(bm, face):
@@ -363,6 +378,7 @@ def add_surface_antenna_to_face(bm, face):
                     for vert_face in vert.link_faces:
                         vert_face.material_index = material_index
 
+
 # Given a face, adds a glowing "landing pad" style disc.
 def add_disc_to_face(bm, face):
     if not face.is_valid:
@@ -389,17 +405,21 @@ def add_disc_to_face(bm, face):
         for face in vert.link_faces:
             face.material_index = Material.glow_disc
 
+
 class Material(IntEnum):
-    hull = 0            # Plain spaceship hull
-    hull_lights = 1     # Spaceship hull with emissive windows
-    hull_dark = 2       # Plain Spaceship hull, darkened
-    exhaust_burn = 3    # Emissive engine burn material
-    glow_disc = 4       # Emissive landing pad disc material
+    hull = 0  # Plain spaceship hull
+    hull_lights = 1  # Spaceship hull with emissive windows
+    hull_dark = 2  # Plain Spaceship hull, darkened
+    exhaust_burn = 3  # Emissive engine burn material
+    glow_disc = 4  # Emissive landing pad disc material
+
 
 # Creates a texture given a texture name, texture type, and filename.
 # Uses an image cache dictionary to prevent loading the same asset from disk twice.
 # Returns the texture.
 img_cache = {}
+
+
 def create_texture(name, tex_type, filename, use_alpha=True):
     if filename in img_cache:
         # Image has been cached already, so just use that.
@@ -413,25 +433,27 @@ def create_texture(name, tex_type, filename, use_alpha=True):
 
         img.use_alpha = use_alpha
         img.pack()
-        
+
         # Cache the asset
         img_cache[(filename, use_alpha)] = img
-    
+
     # Create and return a new texture using img
     tex = bpy.data.textures.new(name, tex_type)
     tex.image = img
     return tex
 
+
 # Adds a hull normal map texture slot to a material.
 def add_hull_normal_map(mat, hull_normal_colortex):
     mtex = mat.texture_slots.add()
     mtex.texture = hull_normal_colortex
-    mtex.texture_coords = 'GLOBAL' # global UVs, yolo
+    mtex.texture_coords = 'GLOBAL'  # global UVs, yolo
     mtex.mapping = 'CUBE'
     mtex.use_map_color_diffuse = False
     mtex.use_map_normal = True
     mtex.normal_factor = 1
     mtex.bump_method = 'BUMP_BEST_QUALITY'
+
 
 # Sets some basic properties for a hull material.
 def set_hull_mat_basics(mat, color, hull_normal_colortex):
@@ -439,12 +461,13 @@ def set_hull_mat_basics(mat, color, hull_normal_colortex):
     mat.diffuse_color = color
     add_hull_normal_map(mat, hull_normal_colortex)
 
+
 # Creates all our materials and returns them as a list.
 def create_materials():
     ret = []
     for material in Material:
         ret.append(bpy.data.materials.new(material.name))
-    
+
     # Choose a base color for the spaceship hull
     hull_base_color = hls_to_rgb(
         random(), uniform(0.05, 0.5), uniform(0, 0.25))
@@ -490,7 +513,7 @@ def create_materials():
 
     # Choose a glow color for the exhaust + glow discs
     glow_color = hls_to_rgb(random(), uniform(0.5, 1), 1)
-    
+
     # Build the exhaust_burn texture
     mat = ret[Material.exhaust_burn]
     mat.diffuse_color = glow_color
@@ -502,6 +525,7 @@ def create_materials():
     mat.emit = 1.0
 
     return ret
+
 
 # Generates a textured spaceship mesh and returns the object.
 # Just uses global cube texture coordinates rather than generating UVs.
@@ -517,7 +541,7 @@ def generate_spaceship(random_seed='',
                        allow_horizontal_symmetry=True,
                        allow_vertical_symmetry=False,
                        apply_bevel_modifier=True,
-                       assign_materials=True):
+                       assign_materials=False):
     if random_seed:
         seed(random_seed)
 
@@ -607,7 +631,7 @@ def generate_spaceship(random_seed='',
             # Skip any long thin faces as it'll probably look stupid
             if get_aspect_ratio(face) > 3:
                 continue
-                
+
             # Spin the wheel! Let's categorize + assign some materials
             val = random()
             if is_rear_face(face):  # rear face
@@ -675,11 +699,11 @@ def generate_spaceship(random_seed='',
 
     # Apply horizontal symmetry sometimes
     if allow_horizontal_symmetry and random() > 0.5:
-        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction=1)
+        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction='Z')
 
     # Apply vertical symmetry sometimes - this can cause spaceship "islands", so disabled by default
     if allow_vertical_symmetry and random() > 0.5:
-        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction=2)
+        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction='X')
 
     # Finish up, write the bmesh into a new mesh
     me = bpy.data.meshes.new('Mesh')
@@ -687,13 +711,13 @@ def generate_spaceship(random_seed='',
     bm.free()
 
     # Add the mesh to the scene
-    scene = bpy.context.scene
+    scene = bpy.context.scene.collection
     obj = bpy.data.objects.new('Spaceship', me)
     scene.objects.link(obj)
 
     # Select and make active
-    scene.objects.active = obj
-    obj.select = True
+    bpy.context.view_layer.objects.active = obj
+    # obj.select = True
 
     # Recenter the object to its center of mass
     bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS')
@@ -709,27 +733,28 @@ def generate_spaceship(random_seed='',
         bevel_modifier.profile = 0.25
         bevel_modifier.limit_method = 'NONE'
 
-    # Add materials to the spaceship
-    me = ob.data
-    materials = create_materials()
-    for mat in materials:
-        if assign_materials:
-            me.materials.append(mat)
-        else:
-            me.materials.append(bpy.data.materials.new(name="Material"))
-    
+    # Add materials to the spaceship **future work**
+    # me = ob.data
+    # materials = create_materials()
+    # for mat in materials:
+    #     if assign_materials:
+    #         me.materials.append(mat)
+    #     else:
+    #         me.materials.append(bpy.data.materials.new(name="Material"))
+
     return obj
 
+
 if __name__ == "__main__":
-    
+
     # When true, this script will generate a single spaceship in the scene.
     # When false, this script will render multiple movie frames showcasing lots of ships.
     generate_single_spaceship = True
-    
+
     if generate_single_spaceship:
         # Reset the scene, generate a single spaceship and focus on it
         reset_scene()
-        customseed = '' # add anything here to generate the same spaceship
+        customseed = ''  # add anything here to generate the same spaceship
         obj = generate_spaceship(customseed)
 
         # View the selected object in all views
@@ -743,24 +768,24 @@ if __name__ == "__main__":
         # Export a movie showcasing many different kinds of ships
 
         # Settings
-        output_path = '' # leave empty to use script folder
+        output_path = ''  # leave empty to use script folder
         total_movie_duration = 16
         total_spaceship_duration = 1
-        yaw_rate = 45 # degrees/sec
-        yaw_offset = 220 # degrees/sec
+        yaw_rate = 45  # degrees/sec
+        yaw_offset = 220  # degrees/sec
         camera_pole_rate = 1
-        camera_pole_pitch_min = 15 # degrees
-        camera_pole_pitch_max = 30 # degrees
-        camera_pole_pitch_offset = 0 # degrees
+        camera_pole_pitch_min = 15  # degrees
+        camera_pole_pitch_max = 30  # degrees
+        camera_pole_pitch_offset = 0  # degrees
         camera_pole_length = 10
         camera_refocus_object_every_frame = False
-        fov = 60 # degrees
+        fov = 60  # degrees
         fps = 30
         res_x = 1920
         res_y = 1080
 
         # Batch render the movie frames
-        inv_fps = 1/float(fps)
+        inv_fps = 1 / float(fps)
         movie_duration = 0
         spaceship_duration = total_spaceship_duration
         scene = bpy.data.scenes["Scene"]
@@ -788,16 +813,16 @@ if __name__ == "__main__":
 
             # Position and orient the camera
             rad = radians(yaw_offset + (yaw_rate * movie_duration))
-            camera_pole_pitch_lerp = 0.5 * (1 + cos(camera_pole_rate * movie_duration)) # 0-1
+            camera_pole_pitch_lerp = 0.5 * (1 + cos(camera_pole_rate * movie_duration))  # 0-1
             camera_pole_pitch = camera_pole_pitch_max * camera_pole_pitch_lerp + \
                                 camera_pole_pitch_min * (1 - camera_pole_pitch_lerp)
             scene.camera.rotation_euler = (radians(90 - camera_pole_pitch + camera_pole_pitch_offset), 0, rad)
             scene.camera.location = (sin(rad) * camera_pole_length,
                                      cos(rad) * -camera_pole_length,
-                                     sin(radians(camera_pole_pitch))*camera_pole_length)
+                                     sin(radians(camera_pole_pitch)) * camera_pole_length)
             if camera_refocus_object_every_frame:
                 bpy.ops.view3d.camera_to_view_selected()
-            
+
             # Render the scene to disk
             script_path = bpy.context.space_data.text.filepath if bpy.context.space_data else __file__
             folder = output_path if output_path else os.path.split(os.path.realpath(script_path))[0]
