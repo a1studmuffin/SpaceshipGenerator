@@ -396,27 +396,6 @@ class Material(IntEnum):
     exhaust_burn = 3    # Emissive engine burn material
     glow_disc = 4       # Emissive landing pad disc material
 
-# Creates a texture given a texture name, texture type, and filename.
-# Uses an image cache dictionary to prevent loading the same asset from disk twice.
-# Returns the texture.
-img_cache = {}
-
-def get_Image(filename):
-    if filename in img_cache:
-        # Image has been cached already, so just use that.
-        img = img_cache[filename]
-    else:
-        # We haven't cached this asset yet, so load it from disk.
-        try:
-            img = bpy.data.images.load(filename, check_existing=True)
-        except:
-            raise IOError("Cannot load image: %s" % filename)
-        img.pack()
-
-        # Cache the asset
-        img_cache[filename] = img
-
-    return img
 
 # Returns shader node
 def getShaderNode(mat):
@@ -471,7 +450,7 @@ def create_materials():
     hull_base_color = (hull_base_color[0], hull_base_color[1], hull_base_color[2], 1.0)
 
     # Load up the hull normal map
-    hull_normal_map = get_Image(resource_path('textures', 'hull_normal.png'))
+    hull_normal_map = bpy.data.images.load(resource_path('textures', 'hull_normal.png'), check_existing=True)
 
 
     # Build the hull texture
@@ -486,7 +465,7 @@ def create_materials():
     links = ntree.links
 
     # Add a diffuse layer that sets the window color
-    hull_lights_diffuse_map = get_Image(resource_path('textures', 'hull_lights_diffuse.png'))
+    hull_lights_diffuse_map = bpy.data.images.load(resource_path('textures', 'hull_lights_diffuse.png'), check_existing=True)
     teximage_diff_node = ntree.nodes.new('ShaderNodeTexImage')
     teximage_diff_node.image = hull_lights_diffuse_map
     teximage_diff_node.projection ='BOX'
@@ -502,7 +481,7 @@ def create_materials():
 
 
     # Add an emissive layer that lights up the windows
-    hull_lights_emessive_map = get_Image(resource_path('textures', 'hull_lights_emit.png'))
+    hull_lights_emessive_map = bpy.data.images.load(resource_path('textures', 'hull_lights_emit.png'), check_existing=True)
     teximage_emit_node = ntree.nodes.new('ShaderNodeTexImage')
     teximage_emit_node.image = hull_lights_emessive_map
     teximage_emit_node.projection ='BOX'
