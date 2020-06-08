@@ -27,17 +27,17 @@ class GenerateSpaceship(Operator):
     bl_label = "Spaceship"
     bl_options = {'REGISTER', 'UNDO'}
 
-    random_seed = StringProperty(default='', name='Seed')
-    num_hull_segments_min      = IntProperty (default=3, min=0, soft_max=16, name='Min. Hull Segments')
-    num_hull_segments_max      = IntProperty (default=6, min=0, soft_max=16, name='Max. Hull Segments')
-    create_asymmetry_segments  = BoolProperty(default=True, name='Create Asymmetry Segments')
-    num_asymmetry_segments_min = IntProperty (default=1, min=1, soft_max=16, name='Min. Asymmetry Segments')
-    num_asymmetry_segments_max = IntProperty (default=5, min=1, soft_max=16, name='Max. Asymmetry Segments')
-    create_face_detail         = BoolProperty(default=True,  name='Create Face Detail')
-    allow_horizontal_symmetry  = BoolProperty(default=True,  name='Allow Horizontal Symmetry')
-    allow_vertical_symmetry    = BoolProperty(default=False, name='Allow Vertical Symmetry')
-    apply_bevel_modifier       = BoolProperty(default=True,  name='Apply Bevel Modifier')
-    assign_materials           = BoolProperty(default=True,  name='Assign Materials')
+    random_seed : StringProperty(default='', name='Seed')
+    num_hull_segments_min      : IntProperty (default=3, min=0, soft_max=16, name='Min. Hull Segments')
+    num_hull_segments_max      : IntProperty (default=6, min=0, soft_max=16, name='Max. Hull Segments')
+    create_asymmetry_segments  : BoolProperty(default=True, name='Create Asymmetry Segments')
+    num_asymmetry_segments_min : IntProperty (default=1, min=1, soft_max=16, name='Min. Asymmetry Segments')
+    num_asymmetry_segments_max : IntProperty (default=5, min=1, soft_max=16, name='Max. Asymmetry Segments')
+    create_face_detail         : BoolProperty(default=True,  name='Create Face Detail')
+    allow_horizontal_symmetry  : BoolProperty(default=True,  name='Allow Horizontal Symmetry')
+    allow_vertical_symmetry    : BoolProperty(default=False, name='Allow Vertical Symmetry')
+    apply_bevel_modifier       : BoolProperty(default=True,  name='Apply Bevel Modifier')
+    assign_materials           : BoolProperty(default=True,  name='Assign Materials')
 
     def execute(self, context):
         spaceship_generator.generate_spaceship(
