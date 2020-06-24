@@ -131,7 +131,7 @@ def is_rear_face(face):
 def add_exhaust_to_face(bm, face):
     if not face.is_valid:
         return
-    
+
     # The more square the face is, the more grid divisions it might have
     num_cuts = randint(1, int(4 - get_aspect_ratio(face)))
     result = bmesh.ops.subdivide_edges(bm,
@@ -139,7 +139,7 @@ def add_exhaust_to_face(bm, face):
                                     cuts=num_cuts,
                                     fractal=0.02,
                                     use_grid_fill=True)
-                                    
+
     exhaust_length = uniform(0.1, 0.2)
     scale_outer = 1 / uniform(1.3, 1.6)
     scale_inner = 1 / uniform(1.05, 1.1)
@@ -195,7 +195,7 @@ def add_cylinders_to_face(bm, face):
             face.verts[2].co, (h + 1) / float(horizontal_step + 1))
         for v in range(vertical_step):
             pos = top.lerp(bottom, (v + 1) / float(vertical_step + 1))
-            cylinder_matrix = get_face_matrix(face, pos) * \
+            cylinder_matrix = get_face_matrix(face, pos) @ \
                 Matrix.Rotation(radians(90), 3, 'X').to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -225,7 +225,7 @@ def add_weapons_to_face(bm, face):
             face.verts[2].co, (h + 1) / float(horizontal_step + 1))
         for v in range(vertical_step):
             pos = top.lerp(bottom, (v + 1) / float(vertical_step + 1))
-            face_matrix = get_face_matrix(face, pos + face.normal * weapon_depth * 0.5) * \
+            face_matrix = get_face_matrix(face, pos + face.normal * weapon_depth * 0.5) @ \
                 Matrix.Rotation(radians(uniform(0, 90)), 3, 'Z').to_4x4()
 
             # Turret foundation
@@ -239,8 +239,8 @@ def add_weapons_to_face(bm, face):
                                   matrix=face_matrix)
 
             # Turret left guard
-            left_guard_mat = face_matrix * \
-                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() * \
+            left_guard_mat = face_matrix @ \
+                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() @ \
                 Matrix.Translation(Vector((0, 0, weapon_size * 0.6))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -252,8 +252,8 @@ def add_weapons_to_face(bm, face):
                                   matrix=left_guard_mat)
 
             # Turret right guard
-            right_guard_mat = face_matrix * \
-                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() * \
+            right_guard_mat = face_matrix @ \
+                Matrix.Rotation(radians(90), 3, 'Y').to_4x4() @ \
                 Matrix.Translation(Vector((0, 0, weapon_size * -0.6))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -266,8 +266,8 @@ def add_weapons_to_face(bm, face):
 
             # Turret housing
             upward_angle = uniform(0, 45)
-            turret_house_mat = face_matrix * \
-                Matrix.Rotation(radians(upward_angle), 3, 'X').to_4x4() * \
+            turret_house_mat = face_matrix @ \
+                Matrix.Rotation(radians(upward_angle), 3, 'X').to_4x4() @ \
                 Matrix.Translation(Vector((0, weapon_size * -0.4, 0))).to_4x4()
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -286,7 +286,7 @@ def add_weapons_to_face(bm, face):
                                   diameter1=weapon_size * 0.1,
                                   diameter2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
-                                  matrix=turret_house_mat * \
+                                  matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * 0.2, 0, -weapon_size))).to_4x4())
             bmesh.ops.create_cone(bm,
                                   cap_ends=True,
@@ -295,7 +295,7 @@ def add_weapons_to_face(bm, face):
                                   diameter1=weapon_size * 0.1,
                                   diameter2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
-                                  matrix=turret_house_mat * \
+                                  matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * -0.2, 0, -weapon_size))).to_4x4())
 
 # Given a face, adds a sphere on the surface, partially inset.
@@ -396,110 +396,117 @@ class Material(IntEnum):
     exhaust_burn = 3    # Emissive engine burn material
     glow_disc = 4       # Emissive landing pad disc material
 
-# Creates a texture given a texture name, texture type, and filename.
-# Uses an image cache dictionary to prevent loading the same asset from disk twice.
-# Returns the texture.
-img_cache = {}
-def create_texture(name, tex_type, filename, use_alpha=True):
-    if filename in img_cache:
-        # Image has been cached already, so just use that.
-        img = img_cache[(filename, use_alpha)]
-    else:
-        # We haven't cached this asset yet, so load it from disk.
-        try:
-            img = bpy.data.images.load(filename)
-        except:
-            raise IOError("Cannot load image: %s" % filename)
 
-        img.use_alpha = use_alpha
-        img.pack()
-        
-        # Cache the asset
-        img_cache[(filename, use_alpha)] = img
-    
-    # Create and return a new texture using img
-    tex = bpy.data.textures.new(name, tex_type)
-    tex.image = img
-    return tex
+# Returns shader node
+def getShaderNode(mat):
+    ntree = mat.node_tree
+    node_out = ntree.get_output_node('EEVEE')
+    shader_node = node_out.inputs['Surface'].links[0].from_node
+    return shader_node
+
+def getShaderInput(mat, name):
+    shaderNode = getShaderNode(mat)
+    return shaderNode.inputs[name]
 
 # Adds a hull normal map texture slot to a material.
-def add_hull_normal_map(mat, hull_normal_colortex):
-    mtex = mat.texture_slots.add()
-    mtex.texture = hull_normal_colortex
-    mtex.texture_coords = 'GLOBAL' # global UVs, yolo
-    mtex.mapping = 'CUBE'
-    mtex.use_map_color_diffuse = False
-    mtex.use_map_normal = True
-    mtex.normal_factor = 1
-    mtex.bump_method = 'BUMP_BEST_QUALITY'
+def add_hull_normal_map(mat, hull_normal_map):
+    ntree = mat.node_tree
+    shader = getShaderNode(mat)
+    links = ntree.links
+
+    teximage_node = ntree.nodes.new('ShaderNodeTexImage')
+    teximage_node.image = hull_normal_map
+    teximage_node.image.colorspace_settings.name = 'Raw'
+    teximage_node.projection ='BOX'
+    tex_coords_node = ntree.nodes.new('ShaderNodeTexCoord')
+    links.new(tex_coords_node.outputs['Object'], teximage_node.inputs['Vector'])
+    normalMap_node = ntree.nodes.new('ShaderNodeNormalMap')
+    links.new(teximage_node.outputs[0], normalMap_node.inputs['Color'])
+    links.new(normalMap_node.outputs['Normal'], shader.inputs['Normal'])
+    return tex_coords_node
+
+
 
 # Sets some basic properties for a hull material.
-def set_hull_mat_basics(mat, color, hull_normal_colortex):
-    mat.specular_intensity = 0.1
-    mat.diffuse_color = color
-    add_hull_normal_map(mat, hull_normal_colortex)
+def set_hull_mat_basics(mat, color, hull_normal_map):
+    shader_node = getShaderNode(mat)
+    shader_node.inputs["Specular"].default_value = 0.1
+    shader_node.inputs["Base Color"].default_value = color
+
+    return add_hull_normal_map(mat, hull_normal_map)
 
 # Creates all our materials and returns them as a list.
 def create_materials():
     ret = []
+
     for material in Material:
-        ret.append(bpy.data.materials.new(material.name))
-    
+        mat = bpy.data.materials.new(name=material.name)
+        mat.use_nodes = True
+        ret.append(mat)
+
     # Choose a base color for the spaceship hull
     hull_base_color = hls_to_rgb(
         random(), uniform(0.05, 0.5), uniform(0, 0.25))
+    hull_base_color = (hull_base_color[0], hull_base_color[1], hull_base_color[2], 1.0)
 
     # Load up the hull normal map
-    hull_normal_colortex = create_texture(
-        'ColorTex', 'IMAGE', resource_path('textures', 'hull_normal.png'))
-    hull_normal_colortex.use_normal_map = True
+    hull_normal_map = bpy.data.images.load(resource_path('textures', 'hull_normal.png'), check_existing=True)
+
 
     # Build the hull texture
     mat = ret[Material.hull]
-    set_hull_mat_basics(mat, hull_base_color, hull_normal_colortex)
+    set_hull_mat_basics(mat, hull_base_color, hull_normal_map)
 
     # Build the hull_lights texture
     mat = ret[Material.hull_lights]
-    set_hull_mat_basics(mat, hull_base_color, hull_normal_colortex)
+    tex_coords_node = set_hull_mat_basics(mat, hull_base_color, hull_normal_map)
+    ntree = mat.node_tree
+    shader_node = getShaderNode(mat)
+    links = ntree.links
 
     # Add a diffuse layer that sets the window color
-    mtex = mat.texture_slots.add()
-    mtex.texture = create_texture(
-        'ColorTex', 'IMAGE', resource_path('textures', 'hull_lights_diffuse.png'))
-    mtex.texture_coords = 'GLOBAL'
-    mtex.mapping = 'CUBE'
-    mtex.blend_type = 'ADD'
-    mtex.use_map_color_diffuse = True
-    mtex.use_rgb_to_intensity = True
-    mtex.color = hls_to_rgb(random(), uniform(0.5, 1), uniform(0, 0.5))
+    hull_lights_diffuse_map = bpy.data.images.load(resource_path('textures', 'hull_lights_diffuse.png'), check_existing=True)
+    teximage_diff_node = ntree.nodes.new('ShaderNodeTexImage')
+    teximage_diff_node.image = hull_lights_diffuse_map
+    teximage_diff_node.projection ='BOX'
+    links.new(tex_coords_node.outputs['Object'], teximage_diff_node.inputs['Vector'])
+    RGB_node = ntree.nodes.new('ShaderNodeRGB')
+    RGB_node.outputs[0].default_value = hull_base_color
+    mix_node = ntree.nodes.new('ShaderNodeMixRGB')
+    links.new(RGB_node.outputs[0], mix_node.inputs[1])
+    links.new(teximage_diff_node.outputs[0], mix_node.inputs[2])
+    links.new(teximage_diff_node.outputs[1], mix_node.inputs[0])
+    links.new(mix_node.outputs[0], shader_node.inputs["Base Color"])
+
+
 
     # Add an emissive layer that lights up the windows
-    mtex = mat.texture_slots.add()
-    mtex.texture = create_texture(
-        'ColorTex', 'IMAGE', resource_path('textures', 'hull_lights_emit.png'), False)
-    mtex.texture_coords = 'GLOBAL'
-    mtex.mapping = 'CUBE'
-    mtex.use_map_emit = True
-    mtex.emit_factor = 2.0
-    mtex.blend_type = 'ADD'
-    mtex.use_map_color_diffuse = False
+    hull_lights_emessive_map = bpy.data.images.load(resource_path('textures', 'hull_lights_emit.png'), check_existing=True)
+    teximage_emit_node = ntree.nodes.new('ShaderNodeTexImage')
+    teximage_emit_node.image = hull_lights_emessive_map
+    teximage_emit_node.projection ='BOX'
+    links.new(tex_coords_node.outputs['Object'], teximage_emit_node.inputs['Vector'])
+    links.new(teximage_emit_node.outputs[0], shader_node.inputs["Emission"])
+
+
 
     # Build the hull_dark texture
     mat = ret[Material.hull_dark]
-    set_hull_mat_basics(mat, [0.3 * x for x in hull_base_color], hull_normal_colortex)
+    set_hull_mat_basics(mat, [0.3 * x for x in hull_base_color], hull_normal_map)
 
     # Choose a glow color for the exhaust + glow discs
     glow_color = hls_to_rgb(random(), uniform(0.5, 1), 1)
-    
-    # Build the exhaust_burn texture
-    mat = ret[Material.exhaust_burn]
-    mat.diffuse_color = glow_color
-    mat.emit = 1.0
+    glow_color = (glow_color[0], glow_color[1], glow_color[2], 1.0)
 
-    # Build the glow_disc texture
+    # # Build the exhaust_burn texture
+    mat = ret[Material.exhaust_burn]
+    shader_node = getShaderNode(mat)
+    shader_node.inputs["Emission"].default_value = glow_color
+
+    # # Build the glow_disc texture
     mat = ret[Material.glow_disc]
-    mat.diffuse_color = glow_color
-    mat.emit = 1.0
+    shader_node = getShaderNode(mat)
+    shader_node.inputs["Emission"].default_value = glow_color
 
     return ret
 
@@ -607,7 +614,7 @@ def generate_spaceship(random_seed='',
             # Skip any long thin faces as it'll probably look stupid
             if get_aspect_ratio(face) > 3:
                 continue
-                
+
             # Spin the wheel! Let's categorize + assign some materials
             val = random()
             if is_rear_face(face):  # rear face
@@ -675,11 +682,11 @@ def generate_spaceship(random_seed='',
 
     # Apply horizontal symmetry sometimes
     if allow_horizontal_symmetry and random() > 0.5:
-        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction=1)
+        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction="Y")
 
     # Apply vertical symmetry sometimes - this can cause spaceship "islands", so disabled by default
     if allow_vertical_symmetry and random() > 0.5:
-        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction=2)
+        bmesh.ops.symmetrize(bm, input=bm.verts[:] + bm.edges[:] + bm.faces[:], direction="Z")
 
     # Finish up, write the bmesh into a new mesh
     me = bpy.data.meshes.new('Mesh')
@@ -689,11 +696,14 @@ def generate_spaceship(random_seed='',
     # Add the mesh to the scene
     scene = bpy.context.scene
     obj = bpy.data.objects.new('Spaceship', me)
-    scene.objects.link(obj)
+    # scene.objects.link(obj)
+    scene.collection.objects.link(obj)
 
     # Select and make active
-    scene.objects.active = obj
-    obj.select = True
+    bpy.context.view_layer.objects.active = obj
+    obj.select_set(True)
+    # scene.objects.active = obj
+    # obj.select = True
 
     # Recenter the object to its center of mass
     bpy.ops.object.origin_set(type='ORIGIN_CENTER_OF_MASS')
@@ -712,20 +722,21 @@ def generate_spaceship(random_seed='',
     # Add materials to the spaceship
     me = ob.data
     materials = create_materials()
+    # materials = []
     for mat in materials:
         if assign_materials:
             me.materials.append(mat)
         else:
             me.materials.append(bpy.data.materials.new(name="Material"))
-    
+
     return obj
 
 if __name__ == "__main__":
-    
+
     # When true, this script will generate a single spaceship in the scene.
     # When false, this script will render multiple movie frames showcasing lots of ships.
     generate_single_spaceship = True
-    
+
     if generate_single_spaceship:
         # Reset the scene, generate a single spaceship and focus on it
         reset_scene()
@@ -797,7 +808,7 @@ if __name__ == "__main__":
                                      sin(radians(camera_pole_pitch))*camera_pole_length)
             if camera_refocus_object_every_frame:
                 bpy.ops.view3d.camera_to_view_selected()
-            
+
             # Render the scene to disk
             script_path = bpy.context.space_data.text.filepath if bpy.context.space_data else __file__
             folder = output_path if output_path else os.path.split(os.path.realpath(script_path))[0]
