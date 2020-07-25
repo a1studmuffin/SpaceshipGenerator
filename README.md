@@ -8,9 +8,10 @@ Usage
 -----
 * Install Blender 2.80 or greater: http://blender.org/download/
 * Download newest `add_mesh_SpaceshipGenerator.zip` from the [Releases](https://github.com/a1studmuffin/SpaceshipGenerator/releases) section
-* Under File > User Preferences... > Add-ons > Install From File... open the downloaded ZIP file
-* Under File > User Preferences... > Add-ons enable this script (search for "spaceship")
+* Under Edit > Preferences... > Add-ons > Install... open the downloaded ZIP file
+* Under Edit > Preferences... > Add-ons enable the "Add Mesh: Spaceship Generator" script (search for "spaceship")
 * Add a spaceship in the 3D View under Add > Mesh > Spaceship
+* Expand the Spaceship tab that appears in the bottom left of the viewport to adjust procedural generation settings
 
 How it works
 ------------
