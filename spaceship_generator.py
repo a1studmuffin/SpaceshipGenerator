@@ -585,7 +585,7 @@ def generate_spaceship(random_seed='',
                     face = ribbed_extrude_face(
                         bm, face, hull_segment_length, randint(2, 4), rib_scale)
 
-    # Add some large asynmmetrical sections of the hull that stick out
+    # Add some large asymmetrical sections of the hull that stick out
     if create_asymmetry_segments:
         for face in bm.faces[:]:
             # Skip any long thin faces as it'll probably look stupid
