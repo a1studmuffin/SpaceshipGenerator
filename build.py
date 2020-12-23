@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+#imporing absolute path, directory name and join as pjoin variable
 from os.path import abspath, dirname, join as pjoin
 import zipfile
 

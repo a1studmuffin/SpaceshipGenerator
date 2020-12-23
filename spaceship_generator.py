@@ -6,8 +6,8 @@
 #
 # michael@spaceduststudios.com
 # https://github.com/a1studmuffin/SpaceshipGenerator
-#
 
+#importing necessary libraries
 import sys
 import os
 import os.path

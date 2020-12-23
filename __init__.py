@@ -17,10 +17,13 @@ if "bpy" in locals():
 else:
     from . import spaceship_generator
 
+#importing blender-python library
 import bpy
 from bpy.props import StringProperty, BoolProperty, IntProperty
 from bpy.types import Operator
 
+
+#class for generating spaceship objects
 class GenerateSpaceship(Operator):
     """Procedurally generate 3D spaceships from a random seed."""
     bl_idname = "mesh.generate_spaceship"
