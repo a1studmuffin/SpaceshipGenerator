@@ -42,7 +42,7 @@ def reset_scene():
 # with all the additional side faces created from the extrusion.
 def extrude_face(bm, face, translate_forwards=0.0, extruded_face_list=None):
     new_faces = bmesh.ops.extrude_discrete_faces(bm, faces=[face])['faces']
-    if extruded_face_list != None:
+    if extruded_face_list is not None:
         extruded_face_list += new_faces[:]
     new_face = new_faces[0]
     bmesh.ops.translate(bm,
