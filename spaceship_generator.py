@@ -201,8 +201,8 @@ def add_cylinders_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=num_segments,
-                                  diameter1=cylinder_size,
-                                  diameter2=cylinder_size,
+                                  radius1=cylinder_size,
+                                  radius2=cylinder_size,
                                   depth=cylinder_depth,
                                   matrix=cylinder_matrix)
 
@@ -233,8 +233,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=num_segments,
-                                  diameter1=weapon_size * 0.9,
-                                  diameter2=weapon_size,
+                                  radius1=weapon_size * 0.9,
+                                  radius2=weapon_size,
                                   depth=weapon_depth,
                                   matrix=face_matrix)
 
@@ -246,8 +246,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=num_segments,
-                                  diameter1=weapon_size * 0.6,
-                                  diameter2=weapon_size * 0.5,
+                                  radius1=weapon_size * 0.6,
+                                  radius2=weapon_size * 0.5,
                                   depth=weapon_depth * 2,
                                   matrix=left_guard_mat)
 
@@ -259,8 +259,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=num_segments,
-                                  diameter1=weapon_size * 0.5,
-                                  diameter2=weapon_size * 0.6,
+                                  radius1=weapon_size * 0.5,
+                                  radius2=weapon_size * 0.6,
                                   depth=weapon_depth * 2,
                                   matrix=right_guard_mat)
 
@@ -273,8 +273,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=8,
-                                  diameter1=weapon_size * 0.4,
-                                  diameter2=weapon_size * 0.4,
+                                  radius1=weapon_size * 0.4,
+                                  radius2=weapon_size * 0.4,
                                   depth=weapon_depth * 5,
                                   matrix=turret_house_mat)
 
@@ -283,8 +283,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=8,
-                                  diameter1=weapon_size * 0.1,
-                                  diameter2=weapon_size * 0.1,
+                                  radius1=weapon_size * 0.1,
+                                  radius2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
                                   matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * 0.2, 0, -weapon_size))).to_4x4())
@@ -292,8 +292,8 @@ def add_weapons_to_face(bm, face):
                                   cap_ends=True,
                                   cap_tris=False,
                                   segments=8,
-                                  diameter1=weapon_size * 0.1,
-                                  diameter2=weapon_size * 0.1,
+                                  radius1=weapon_size * 0.1,
+                                  radius2=weapon_size * 0.1,
                                   depth=weapon_depth * 6,
                                   matrix=turret_house_mat @ \
                                          Matrix.Translation(Vector((weapon_size * -0.2, 0, -weapon_size))).to_4x4())
@@ -309,7 +309,7 @@ def add_sphere_to_face(bm, face):
                                     uniform(0, sphere_size * 0.5))
     result = bmesh.ops.create_icosphere(bm,
                                         subdivisions=3,
-                                        diameter=sphere_size,
+                                        radius=sphere_size,
                                         matrix=sphere_matrix)
     for vert in result['verts']:
         for face in vert.link_faces:
@@ -337,13 +337,13 @@ def add_surface_antenna_to_face(bm, face):
                 material_index = Material.hull if random() > 0.5 else Material.hull_dark
 
                 # Spire
-                num_segments = uniform(3, 6)
+                num_segments = randint(3, 6) #uniform(3, 6)
                 result = bmesh.ops.create_cone(bm,
                                                cap_ends=False,
                                                cap_tris=False,
-                                               segments=num_segments,
-                                               diameter1=0,
-                                               diameter2=base_diameter,
+                                               segments= num_segments,
+                                               radius1=0,
+                                               radius2=base_diameter,
                                                depth=depth,
                                                matrix=get_face_matrix(face, pos + face.normal * depth * 0.5))
                 for vert in result['verts']:
@@ -355,8 +355,8 @@ def add_surface_antenna_to_face(bm, face):
                                                cap_ends=True,
                                                cap_tris=False,
                                                segments=num_segments,
-                                               diameter1=base_diameter * uniform(1, 1.5),
-                                               diameter2=base_diameter * uniform(1.5, 2),
+                                               radius1=base_diameter * uniform(1, 1.5),
+                                               radius2=base_diameter * uniform(1.5, 2),
                                                depth=depth_short,
                                                matrix=get_face_matrix(face, pos + face.normal * depth_short * 0.45))
                 for vert in result['verts']:
@@ -373,16 +373,16 @@ def add_disc_to_face(bm, face):
                           cap_ends=True,
                           cap_tris=False,
                           segments=32,
-                          diameter1=depth * 3,
-                          diameter2=depth * 4,
+                          radius1=depth * 3,
+                          radius2=depth * 4,
                           depth=depth,
                           matrix=get_face_matrix(face, face.calc_center_bounds() + face.normal * depth * 0.5))
     result = bmesh.ops.create_cone(bm,
                                    cap_ends=False,
                                    cap_tris=False,
                                    segments=32,
-                                   diameter1=depth * 1.25,
-                                   diameter2=depth * 2.25,
+                                   radius1=depth * 1.25,
+                                   radius2=depth * 2.25,
                                    depth=0.0,
                                    matrix=get_face_matrix(face, face.calc_center_bounds() + face.normal * depth * 1.05))
     for vert in result['verts']:
