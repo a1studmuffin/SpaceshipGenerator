@@ -416,7 +416,7 @@ def add_hull_normal_map(mat, hull_normal_map):
 
     teximage_node = ntree.nodes.new('ShaderNodeTexImage')
     teximage_node.image = hull_normal_map
-    teximage_node.image.colorspace_settings.name = 'Raw'
+    teximage_node.image.colorspace_settings.name = 'Non-Color'
     teximage_node.projection ='BOX'
     tex_coords_node = ntree.nodes.new('ShaderNodeTexCoord')
     links.new(tex_coords_node.outputs['Object'], teximage_node.inputs['Vector'])
@@ -430,7 +430,7 @@ def add_hull_normal_map(mat, hull_normal_map):
 # Sets some basic properties for a hull material.
 def set_hull_mat_basics(mat, color, hull_normal_map):
     shader_node = getShaderNode(mat)
-    shader_node.inputs["Specular"].default_value = 0.1
+    shader_node.inputs["Specular IOR Level"].default_value = 0.1
     shader_node.inputs["Base Color"].default_value = color
 
     return add_hull_normal_map(mat, hull_normal_map)
@@ -486,8 +486,8 @@ def create_materials():
     teximage_emit_node.image = hull_lights_emessive_map
     teximage_emit_node.projection ='BOX'
     links.new(tex_coords_node.outputs['Object'], teximage_emit_node.inputs['Vector'])
-    links.new(teximage_emit_node.outputs[0], shader_node.inputs["Emission"])
-
+    links.new(teximage_emit_node.outputs[0], shader_node.inputs["Emission Color"])
+    shader_node.inputs["Emission Strength"].default_value = 4.9
 
 
     # Build the hull_dark texture
@@ -501,12 +501,14 @@ def create_materials():
     # # Build the exhaust_burn texture
     mat = ret[Material.exhaust_burn]
     shader_node = getShaderNode(mat)
-    shader_node.inputs["Emission"].default_value = glow_color
+    shader_node.inputs["Emission Color"].default_value = glow_color
+    shader_node.inputs["Emission Strength"].default_value = 0.4
 
     # # Build the glow_disc texture
     mat = ret[Material.glow_disc]
     shader_node = getShaderNode(mat)
-    shader_node.inputs["Emission"].default_value = glow_color
+    shader_node.inputs["Emission Color"].default_value = glow_color
+    shader_node.inputs["Emission Strength"].default_value = 4.9
 
     return ret
 
